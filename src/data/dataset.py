@@ -131,7 +131,7 @@ def get_thestack_dataset(
                             os.path.join(data_dir),
                             f"the_stack_{language}_script_{i}.{dataset_sample['ext']}",
                         ),
-                        "w",
+                        "w", encoding="utf-8"
                     ) as f:
                         f.write(dataset_sample["content"])
                         tracker[
@@ -265,6 +265,9 @@ if __name__ == "__main__":
     import pandas as pd
     import yaml
 
+    if not os.path.exists(os.path.join(os.getcwd(), "logs")):
+        os.makedirs(os.path.join(os.getcwd(), "logs"))
+
     with open(os.path.join(os.getcwd(), "src", "logging_config.yaml"), "r") as f:
         config = yaml.safe_load(f.read())
     logging.config.dictConfig(config)
@@ -281,7 +284,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get_scripts:
-        get_thestack_dataset(scripts_num=10**5)
+        get_thestack_dataset(scripts_num=10**4)
     else:
         # repo_info = json.load(open(os.path.join(os.getcwd(), "data", "repos.json"), "r"))
 

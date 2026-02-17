@@ -7,7 +7,10 @@ from src.checker.checker import Checker
 
 class TestChecker(unittest.TestCase):
     def setUp(self):
-        self.checker = Checker(os.path.join(os.getcwd(),'src','main.py'))  # assuming you have a test.py file
+        # Dynamically construct the absolute path to main.py
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        main_py_path = os.path.join(project_root, 'src', 'main.py')
+        self.checker = Checker(main_py_path)  # assuming you have a test.py file
 
     def test_prepare_input(self):
         self.checker.prepare_input()

@@ -45,15 +45,18 @@ if __name__ == "__main__":
 
     for subdir in subdirectories:
         subdir_path = os.path.join(data_directory, subdir)
-        python_files = [
-            file for file in os.listdir(subdir_path) if file.endswith(".py")
-        ]
-        if python_files:
-            python_files_found = True
+        # Recursively search for python files in subdirectories
+        for root, dirs, files in os.walk(subdir_path):
+            python_files = [file for file in files if file.endswith(".py")]
+            if python_files:
+                python_files_found = True
+                break
+        if python_files_found:
             break
 
     assert (
         python_files_found
     ), "No python files found in subdirectories of data directory. Check the dataset"
 
-    run_tests("/store/travail/vamaj/TWMC/tests/")
+    tests_directory = os.path.join(os.getcwd(), "tests")
+    run_tests(tests_directory)

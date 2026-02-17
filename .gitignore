@@ -40,3 +40,8 @@ results.json
 /systems
 git_access_token
 JPlag.jar
+
+/data/repos
+/data/the_stack
+
+/venv
