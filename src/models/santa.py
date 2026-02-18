@@ -42,6 +42,7 @@ class SantaCoder(InfillModel):
                 checkpoint,
                 revision="comments",
                 trust_remote_code=True,
+                torch_dtype=torch.bfloat16,
                 max_length=200,
             ).to(self.device)
             logger.info(f"SantaCoder model successfuly loaded")
@@ -189,6 +190,7 @@ class SantaCoderBlock(InfillModel):
                 revision="comments",
                 trust_remote_code=True,
                 max_length=200,
+                torch_dtype=torch.bfloat16,
             ).to(self.device)
             logger.info(f"SantaCoderBlock model successfuly loaded")
         except Exception as e:

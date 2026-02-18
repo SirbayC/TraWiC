@@ -25,7 +25,7 @@ class Checker:
         # read the input file
         if input_path.endswith(".py"):
             self.input_path = input_path
-            self.original_input = open(self.input_path, "r").read()
+            self.original_input = open(self.input_path, "r", encoding="utf-8", errors="ignore").read()
         else:  #! For now only python is supported
             raise NotImplementedError
         # extract the items from the input file

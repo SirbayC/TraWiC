@@ -42,7 +42,7 @@ There are two modes for running the experiments. `single script` mode and `block
 
 - For generating the data for TraWiC, run the following command:
     ```bash
-    python src/main.py
+    python src/main_santacoder.py
     ```
     The outputs will be saved in the `run_results\TokensRun{run_num}` directory in the `results.jsonl` file.
 

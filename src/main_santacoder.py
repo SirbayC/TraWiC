@@ -191,17 +191,49 @@ if __name__ == "__main__":
     ).readlines()
     dangerous_files = [file.rstrip("\n") for file in dangerous_files]
 
-    for file_path in dataset_files:
-        if (
-            file_path in files_generated_blocks
-            and file_path not in already_processed_files
-            and file_path not in dangerous_files
-        ):
-            results = []
-            print("\033[91m" + file_path + "\033[0m")
-            result = get_model_output(file_path)
+    stack_count = 0
+    repo_count = 0
+    LIMIT = 50  # Process 50 files from each class (Total 100)
 
-            with open(
-                os.path.join(WORKING_DIR, "run_results", "processed_tokens.txt"), "a"
-            ) as f:
-                f.write(file_path + "\n")
+    for file_path in dataset_files:
+        # 1. Check if we should skip this file based on logs
+        if file_path in dangerous_files:
+            continue
+
+        # 2. Determine if file is Member (Stack) or Non-Member (Repos)
+        is_stack = "the_stack" in file_path
+
+        # 3. Check class-specific limits
+        if is_stack and stack_count >= LIMIT:
+            continue
+        if not is_stack and repo_count >= LIMIT:
+            continue
+        
+        # 4. Process the file
+        print("\033[91m" + file_path + "\033[0m")
+        
+        # Update counters BEFORE processing (so we count attempts)
+        if is_stack:
+            stack_count += 1
+        else:
+            repo_count += 1
+
+        print("Repo: " + str(repo_count))
+        print("Stack: " + str(stack_count))
+
+        if file_path in already_processed_files:
+            continue
+            
+        # Run the model (This function handles writing the results to JSONL)
+        get_model_output(file_path)
+
+        # 5. Log that we finished this file
+        with open(
+            os.path.join(WORKING_DIR, "run_results", "processed_tokens.txt"), "a"
+        ) as f:
+            f.write(file_path + "\n")
+
+        # 6. Global Stop Condition
+        if stack_count >= LIMIT and repo_count >= LIMIT:
+            print("Reached limit for both classes. Stopping.")
+            break
