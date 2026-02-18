@@ -71,7 +71,7 @@ print("\033[93m" + f"Working directory: {WORKING_DIR}" + "\033[0m")
 model = SantaCoder() if args.model == "santa_coder" else None
 
 
-def get_model_output(file_path):
+def get_model_output(file_path) -> int:
     results = []
     file_checker = Checker(file_path)
     model_inputs = [
@@ -101,7 +101,7 @@ def get_model_output(file_path):
         if model_output == "too_many_tokens":
             f = open(os.path.join(os.getcwd(), "run_results", "too_many_tokens.txt"), "a")
             f.write(file_path + "\n")
-            return None
+            return 400
         else:
             try:
                 result = file_checker.check_similarity(
@@ -127,7 +127,7 @@ def get_model_output(file_path):
                 )
             except Exception as e:
                 logging.error(e)
-                return None
+                return 500
     with open(
         os.path.join(
             os.getcwd(), "run_results", f"TokensRun{args.run_num}", "results.jsonl"
@@ -137,6 +137,7 @@ def get_model_output(file_path):
         json_results = json.dumps(results)
         f.write(json_results)
         f.write("\n")
+    return 200
 
 
 if __name__ == "__main__":
@@ -191,13 +192,21 @@ if __name__ == "__main__":
     ).readlines()
     dangerous_files = [file.rstrip("\n") for file in dangerous_files]
 
+    large_files = open(
+        os.path.join(WORKING_DIR, "run_results", f"too_many_tokens.txt"),
+        "r",
+    ).readlines()
+    large_files = [file.rstrip("\n") for file in large_files]
+
     stack_count = 0
     repo_count = 0
     LIMIT = 50  # Process 50 files from each class (Total 100)
 
     for file_path in dataset_files:
         # 1. Check if we should skip this file based on logs
-        if file_path in dangerous_files:
+        if file_path in dangerous_files or file_path in large_files:
+            print("\033[91m" + file_path + "\033[0m")
+            print("Skipping...")
             continue
 
         # 2. Determine if file is Member (Stack) or Non-Member (Repos)
@@ -211,21 +220,31 @@ if __name__ == "__main__":
         
         # 4. Process the file
         print("\033[91m" + file_path + "\033[0m")
+        print("Processing...")
         
-        # Update counters BEFORE processing (so we count attempts)
-        if is_stack:
-            stack_count += 1
-        else:
-            repo_count += 1
-
-        print("Repo: " + str(repo_count))
-        print("Stack: " + str(stack_count))
-
         if file_path in already_processed_files:
+            print("Already processed")
+            if is_stack:
+                stack_count += 1
+                print("Stack: " + str(stack_count))
+            else:
+                repo_count += 1
+                print("Repo: " + str(repo_count))
             continue
             
         # Run the model (This function handles writing the results to JSONL)
-        get_model_output(file_path)
+        output_code = get_model_output(file_path)
+
+        if output_code == 200:
+            print("Successfully processed")
+            if is_stack:
+                stack_count += 1
+                print("Stack: " + str(stack_count))
+            else:
+                repo_count += 1
+                print("Repo: " + str(repo_count))
+        else:
+            print("Error: " + str(output_code))
 
         # 5. Log that we finished this file
         with open(
