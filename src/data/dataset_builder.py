@@ -9,11 +9,6 @@ import pandas as pd
 import tqdm
 from fuzzywuzzy import fuzz
 
-try:
-    from skip_data import SKIPS
-except ImportError:
-    from src.data.skip_data import SKIPS
-
 sensitivity = False
 sensitivity_threshold = 0.9
 syn_thresh = 100
@@ -102,7 +97,7 @@ def build_dataset(jsonl_file_path: str) -> str:
         ]
     )
 
-    jsonl_file = open(os.path.join(jsonl_file_path, "results_all.jsonl"), "r")
+    jsonl_file = open(os.path.join(jsonl_file_path, "results.jsonl"), "r")
     results_data = [line for line in jsonl_file]
 
     series_list = []
@@ -110,15 +105,15 @@ def build_dataset(jsonl_file_path: str) -> str:
         file_contents = json.loads(row)
         for entry in file_contents:
             try:
-                file_name = entry["file_path"].split("data", 1)[1][1:]
+                file_name = os.path.basename(entry["file_path"])
                 level = entry["level"]
                 similarity_metric = entry["similarity_metric"]
                 result = entry["result"]
                 similarity_objective = entry["similarity_objective"]
-                if similarity_objective in SKIPS:
+                if similarity_objective in ['""";"""', '"""\n"""', '""""""', "' '", "'\n'", "''", '""" """']:
                     raise KeyError
                 model_output = entry["model_output"]
-                # file_in_training_set = file_labels[file_name]
+                is_stack = 1 if "the_stack" in entry["file_path"] else 0
 
                 series_list.append(
                     pd.Series(
@@ -129,7 +124,7 @@ def build_dataset(jsonl_file_path: str) -> str:
                             "result": result,
                             "similarity_objective": similarity_objective,
                             "model_output": model_output,
-                            "trained_on": 1,
+                            "trained_on": is_stack
                         }
                     )
                 )
@@ -325,13 +320,14 @@ def process_dataset(
         )
     # convert lm_dict to a dataframe
     lm_ds = pd.DataFrame.from_dict(lm_dict, orient="index")
-
+    lm_ds.index.name = "file_name"
     return lm_ds
 
 
 if __name__ == "__main__":
-    path = "/home/vamaj/scratch/TraWiC/run_results/mistral_epoch_1/trained_on"
-    # for path in paths:
+    WORKING_DIR = os.getcwd()
+    path = os.path.join(WORKING_DIR, "run_results", "TokensRun4") 
+    
     build_dataset(path)
     print("Datasets built.")
 
@@ -348,67 +344,25 @@ if __name__ == "__main__":
     test_df = final_dataset.iloc[int(0.8 * len(final_dataset)) :]
 
     if not sensitivity:
-        if not os.path.exists(
-            os.path.join(
-                "/home/vamaj/scratch/TraWiC/",
-                "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}",
-            )
-        ):
-            os.mkdir(
-                os.path.join(
-                    "/home/vamaj/scratch/TraWiC/",
-                    "rf_data",
-                    f"syn{syn_thresh}_sem{sem_thresh}",
-                )
-            )
+        rf_data_dir = os.path.join(
+            WORKING_DIR, 
+            "rf_data", 
+            f"syn{syn_thresh}_sem{sem_thresh}"
+        )
+        os.makedirs(rf_data_dir, exist_ok=True)
 
-        train_df.to_csv(
-            os.path.join(
-                "/home/vamaj/scratch/TraWiC/" "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}",
-                "train.csv",
-            ),
-        )
-        test_df.to_csv(
-            os.path.join(
-                "/home/vamaj/scratch/TraWiC/",
-                "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}",
-                "test.csv",
-            ),
-        )
+        train_df.to_csv(os.path.join(rf_data_dir, "train.csv"))
+        test_df.to_csv(os.path.join(rf_data_dir, "test.csv"))
 
     else:
-        if not os.path.exists(
-            os.path.join(
-                os.getcwd(),
-                "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
-            )
-        ):
-            os.mkdir(
-                os.path.join(
-                    os.getcwd(),
-                    "rf_data",
-                    f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
-                )
-            )
+        rf_data_dir = os.path.join(
+            WORKING_DIR,
+            "rf_data",
+            f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
+        )
+        os.makedirs(rf_data_dir, exist_ok=True)
 
-        train_df.to_csv(
-            os.path.join(
-                os.getcwd(),
-                "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
-                "train.csv",
-            ),
-        )
-        test_df.to_csv(
-            os.path.join(
-                os.getcwd(),
-                "rf_data",
-                f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
-                "test.csv",
-            ),
-        )
+        train_df.to_csv(os.path.join(rf_data_dir, "train.csv"))
+        test_df.to_csv(os.path.join(rf_data_dir, "test.csv"))
+
     print("Datasets processed.")

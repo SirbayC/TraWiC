@@ -1,18 +1,10 @@
 import json
 import os
 import random
-import tokenize
-from io import BytesIO
-from typing import List, Tuple
 
 import pandas as pd
 import tqdm
 from fuzzywuzzy import fuzz
-
-try:
-    from skip_data import SKIPS
-except ImportError:
-    from src.data.skip_data import SKIPS
 
 sensitivity = False
 sensitivity_threshold = 0.9
@@ -54,7 +46,7 @@ def build_dataset(jsonl_file_path: str) -> str:
                 similarity_metric = entry["similarity_metric"]
                 result = entry["result"]
                 similarity_objective = entry["similarity_objective"]
-                if similarity_objective in SKIPS:
+                if similarity_objective in ['""";"""', '"""\n"""', '""""""', "' '", "'\n'", "''", '""" """']:
                     raise KeyError
                 model_output = entry["model_output"]
                 # file_in_training_set = file_labels[file_name]
