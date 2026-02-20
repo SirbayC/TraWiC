@@ -1,4 +1,4 @@
-This repository contains the codes and artifacts for our paper, [TraWiC: Trained Without My Consent](https://arxiv.org/abs/2402.09299).
+This repository contains the codes and artifacts for the paper, [TraWiC: Trained Without My Consent](https://arxiv.org/abs/2402.09299). The adaptation focuses on cleaning up files to strip the codebase down to a basic end-to-end MIA flow.
 
 `TraWiC` is a tool designed for dataset inclusion detection in the training dataset of large language models trained on code using membership inference attacks.
 
