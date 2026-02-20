@@ -49,7 +49,7 @@ args = arg_parse.parse_args()
 
 combined_ds = pd.read_csv(
     os.path.join(
-        "/home/vamaj/scratch/TraWiC/",
+        os.getcwd(),
         "rf_data",
         f"syn{args.syntactic_threshold}_sem{args.semantic_threshold}",
         "train.csv",
@@ -65,11 +65,11 @@ train_ds, test_ds = train_test_split(
 )
 
 # drop the index column
-train_ds.drop(columns=["Unnamed: 0"], inplace=True)
-test_ds.drop(columns=["Unnamed: 0"], inplace=True)
+train_ds.drop(columns=["Unnamed: 0"], inplace=True, errors='ignore')
+test_ds.drop(columns=["Unnamed: 0"], inplace=True, errors='ignore')
 
-# split the training and testing datasets into x and y
-x, y = train_ds.iloc[:, :-1].values, train_ds.iloc[:, -1].values
+# split the training and testing datasets into x and y (skip first column which is filename)
+x, y = train_ds.iloc[:, 1:-1].values, train_ds.iloc[:, -1].values
 print(f"Features shape: {x.shape}")
 print(f"Target shape: {y.shape}")
 print(f"Features Snippet: {x[:1]}")
@@ -131,7 +131,7 @@ print("Number of 1s and 0s in the test dataset:", test_ds["trained_on"].value_co
 # create a confusion matrix and print it
 tn, fp, fn, tp = confusion_matrix(
     test_ds.iloc[:, -1].values,
-    clf.predict(test_ds.iloc[:, 1:].values),
+    clf.predict(test_ds.iloc[:, 1:-1].values),
 ).ravel()
 
 print(
@@ -143,12 +143,12 @@ print(
 # print the accuracy
 accuracy = accuracy_score(
     test_ds.iloc[:, -1].values,
-    clf.predict(test_ds.iloc[:, :-1].values),
+    clf.predict(test_ds.iloc[:, 1:-1].values),
 )
 # calcualte the precision and recall
 precision, recall, fscore, _ = precision_recall_fscore_support(
     test_ds.iloc[:, -1].values,
-    clf.predict(test_ds.iloc[:, :-1].values),
+    clf.predict(test_ds.iloc[:, 1:-1].values),
     average="weighted",
 )
 
@@ -168,11 +168,6 @@ pickle.dump(
     ),
 )
 
-# aclculate multicollinearity usign VIF
-import statsmodels.api as sm
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-
 if args.visualisation:
     sns.set_theme(style="dark")
 
@@ -184,7 +179,7 @@ if args.visualisation:
     # ax.set_ylabel("Features", fontsize=10)
 
     # Horizontal bar chart with feature importances
-    ax.barh(train_ds.columns[:-1], clf.feature_importances_)
+    ax.barh(train_ds.columns[1:-1], clf.feature_importances_)
 
     # Rotate y-axis labels to fit
     plt.yticks(rotation=0)
@@ -195,7 +190,9 @@ if args.visualisation:
         dpi=300,
     )
     # calcualte the distriutino of each feature
-    train_ds.hist(figsize=(20, 20))
+    # Use only numeric columns (exclude filename)
+    train_ds_numeric = train_ds.select_dtypes(include=['number'])
+    train_ds_numeric.hist(figsize=(20, 20))
     plt.tight_layout()
     plt.savefig(
         f"feature_distribution__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
@@ -205,10 +202,10 @@ if args.visualisation:
     fig, ax = plt.subplots(figsize=(12, 12))
     # Create the heatmap, ensuring square cells and other configurations
     sns.heatmap(
-        train_ds.corr(method="spearman"), annot=True, fmt=".2f", ax=ax, square=True
+        train_ds_numeric.corr(method="spearman"), annot=True, fmt=".2f", ax=ax, square=True
     )
     # Adjusting the Y-axis limit
-    ax.set_ylim(len(train_ds.columns), 0)
+    ax.set_ylim(len(train_ds_numeric.columns), 0)
     ax.tick_params(labelsize=12)
     plt.tight_layout(pad=2)
     plt.savefig(

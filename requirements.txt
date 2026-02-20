@@ -55,4 +55,9 @@ tzdata==2024.1
 urllib3==2.0.2
 xxhash==3.2.0
 yarl==1.9.2
-# INSTALL CUDA 13.0: pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+matplotlib
+seaborn
+xgboost
+scikit-learn
+statsmodels
+# INSTALL CUDA 13.0: pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu121

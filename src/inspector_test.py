@@ -32,7 +32,7 @@ arg_parse.add_argument(
 arg_parse.add_argument(
     "--semantic_threshold",
     type=int,
-    default=80,
+    default=20,
 )
 
 args = arg_parse.parse_args()
