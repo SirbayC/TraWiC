@@ -1,4 +1,3 @@
-import inspect
 import logging
 from typing import Tuple
 
@@ -177,66 +176,7 @@ class SantaCoder(InfillModel):
         except Exception as e:
             logger.exception(f"Error in generating code snippet")
 
-
-class SantaCoderBlock(InfillModel):
-    def __init__(self):
-        checkpoint = "bigcode/santacoder"
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        try:
-            self.tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                checkpoint,
-                revision="comments",
-                trust_remote_code=True,
-                max_length=200,
-                torch_dtype=torch.bfloat16,
-            ).to(self.device)
-            logger.info(f"SantaCoderBlock model successfuly loaded")
-        except Exception as e:
-            logger.exception(f"Error in loading the SantaCoderBlock model")
-
-    def predict(self, input_text: str, suffix_text: str) -> str:
-        """
-        Generate code snippet from the input text
-
-        Args:
-            input_text (str): input code. not tokenized.
-
-        Raises:
-            e: any error in generating code snippet
-
-        Returns:
-            str: geenrated code snippet
-        """
-
-        try:
-            inputs: torch.Tensor = self.tokenizer.encode(
-                input_text, return_tensors="pt"
-            ).to(self.device)
-            suffixes = self.tokenizer.encode(suffix_text, return_tensors="pt").to(
-                self.device
-            )
-            with torch.no_grad():
-                outputs: torch.Tensor = self.model.generate(
-                    inputs,
-                    pad_token_id=self.tokenizer.eos_token_id,
-                    max_new_tokens=suffixes.shape[1],
-                )
-
-            logger.debug(
-                f"SantaCoderBlock Invoked - input = ( {input_text} ) - output = ( {self.tokenizer.decode(outputs[0])} )"
-            )
-            return self.tokenizer.decode(outputs[0])
-        except Exception as e:
-            logger.exception(f"Error in generating code snippet from SantaCoderBlock")
-            raise e
-
-    def infill(self, input_text) -> None:
-        pass
-
-
 if __name__ == "__main__":
-    test_mdel = SantaCoderBlock()
+    test_mdel = SantaCoder()
     out = test_mdel.predict("def test():")
     print(out)

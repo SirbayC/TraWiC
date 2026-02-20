@@ -4,8 +4,6 @@ import pickle
 from argparse import ArgumentParser
 
 import pandas as pd
-import xgboost as xgb
-from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
 from tqdm import tqdm
 
@@ -18,12 +16,6 @@ class Colors:
 
 
 arg_parse = ArgumentParser()
-arg_parse.add_argument(
-    "--classifier",
-    type=str,
-    choices=["rf", "svm", "xgb"],
-    default="xgb",
-)
 arg_parse.add_argument(
     "--syntactic_threshold",
     type=int,
@@ -48,19 +40,10 @@ combined_ds = pd.read_csv(
 
 x, y = combined_ds.iloc[:, 1:-1].values, combined_ds.iloc[:, -1].values
 
-if args.classifier == "rf":
-    clf = RandomForestClassifier()
-
-elif args.classifier == "svm":
-    clf = svm.SVC()
-
-elif args.classifier == "xgb":
-    clf = xgb.XGBClassifier(objective="binary:logistic")
-
-# load the model
+# load the Random Forest model
 clf = pickle.load(
     open(
-        f"{args.classifier}_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
+        f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
         "rb",
     )
 )
@@ -79,7 +62,7 @@ false_negatives = 0
 
 # final results file
 results_file = open(
-    f"clf_{args.classifier}.csv",
+    f"clf_rf.csv",
     "a",
 )
 results_file.write(
@@ -87,7 +70,7 @@ results_file.write(
 )
 
 with open(
-    f"inspector_test_file_level_clf_{args.classifier}__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    f"inspector_test_file_level_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
     "w",
 ) as f:
     f.write("repo_name,actual,predicted\n")
@@ -136,7 +119,7 @@ repo_false_negatives = 0
 
 threshold = 0.4  # if more than 40% of the files in a repo are predicted as 1, then the whole repo is predicted as 1
 with open(
-    f"inspector_test_repo_level_0.4_clf_{args.classifier}__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    f"inspector_test_repo_level_0.4_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
     "w",
 ) as f:
     f.write("repo_name,predicted,actual\n")
@@ -178,7 +161,7 @@ repo_false_negatives = 0
 
 threshold = 0.6  # if more than 40% of the files in a repo are predicted as 1, then the whole repo is predicted as 1
 with open(
-    f"inspector_test_repo_level_0.6_clf_{args.classifier}__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    f"inspector_test_repo_level_0.6_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
     "w",
 ) as f:
     f.write("repo_name,predicted,actual\n")

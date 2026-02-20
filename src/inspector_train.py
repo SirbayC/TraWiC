@@ -5,8 +5,6 @@ from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import xgboost as xgb
-from sklearn import svm, tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
@@ -24,12 +22,6 @@ class Colors:
 
 
 arg_parse = ArgumentParser()
-arg_parse.add_argument(
-    "--classifier",
-    type=str,
-    choices=["rf", "svm", "xgb"],
-    default="rf",
-)
 arg_parse.add_argument(
     "--syntactic_threshold",
     type=int,
@@ -75,37 +67,14 @@ print(f"Target shape: {y.shape}")
 print(f"Features Snippet: {x[:1]}")
 print(f"Target Snippet: {y[:1]}")
 
-# classifier
-if args.classifier == "rf":
-    clf = RandomForestClassifier()
-    # grid search parameters for random forest
-    param_grid = {
-        "n_estimators": [50, 100, 200],
-        "max_features": ["sqrt", "log2"],
-        "max_depth": [10, 20, 30],
-        "criterion": ["gini", "entropy"],
-    }
-
-
-elif args.classifier == "svm":
-    clf = svm.SVC()
-    # grid search parameters for svm
-    param_grid = {
-        "C": [0.1, 1, 10, 100],
-        "gamma": [1, 0.1, 0.01, 0.001],
-        "kernel": ["rbf", "linear"],
-    }
-
-elif args.classifier == "xgb":
-    clf = xgb.XGBClassifier(objective="binary:logistic")
-    # grid search parameters for xgboost
-    param_grid = {
-        "learning_rate": [0.01, 0.1, 0.5],
-        "max_depth": [3, 5, 7],
-        "n_estimators": [50, 100, 200],
-        "subsample": [0.6, 0.8, 1.0],
-        "colsample_bytree": [0.6, 0.8, 1.0],
-    }
+# classifier: Random Forest
+clf = RandomForestClassifier()
+param_grid = {
+    "n_estimators": [50, 100, 200],
+    "max_features": ["sqrt", "log2"],
+    "max_depth": [10, 20, 30],
+    "criterion": ["gini", "entropy"],
+}
 
 grid_search = GridSearchCV(
     estimator=clf,
@@ -163,7 +132,7 @@ print(
 pickle.dump(
     clf,
     open(
-        f"{args.classifier}_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
+        f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
         "wb",
     ),
 )

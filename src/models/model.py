@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-
+from abc import abstractmethod
 
 class InfillModel:
     def __init__(self) -> None:
