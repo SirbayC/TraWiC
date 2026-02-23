@@ -53,5 +53,6 @@ responses==0.18.0
 six==1.16.0
 platformdirs==3.5.0
 
-# PyTorch (install separately with CUDA support):
-# pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.4.1
+torchvision==0.19.1
