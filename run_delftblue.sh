@@ -4,7 +4,7 @@
 #SBATCH --partition=gpu-a100
 #SBATCH --time=09:30:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=4
 #SBATCH --gpus-per-task=1
 #SBATCH --mem-per-cpu=8000M
 #SBATCH --account=Education-EEMCS-Courses-CSE3000
@@ -13,7 +13,7 @@
 # PREFLIGHT CHECKS:
 # - time
 # - partition
-# - limit inference ? --max_infer_samples=100 \
+# --limit_per_class=50
 
 set -euo pipefail
 
@@ -55,7 +55,8 @@ cd "$REPO_DIR"
 # ── Step 1: Model Inference ────────────────────────────────────────────────────
 echo "[$(date)] Running SantaCoder inference..."
 python -u src/main_santacoder.py \
-  --output_dir="$OUTDIR"
+  --output_dir="$OUTDIR" \
+  --limit_per_class=500
 
 # ── Step 2: Build Classification Dataset ──────────────────────────────────────
 echo "[$(date)] Building classification dataset..."

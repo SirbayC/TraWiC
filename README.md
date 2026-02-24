@@ -95,6 +95,7 @@ Optional arguments:
 - `--output_dir` — custom output directory (default: `run_results`)
 - `--dataset_path` — path to the dataset (default: `data`)
 - `--sorted` — process files in sorted order (default: `False`)
+- `--limit_per_class` — max files per class: TheStack and repos (default: `50`)
 
 Example with custom output:
 ```bash

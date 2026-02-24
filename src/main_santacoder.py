@@ -55,6 +55,12 @@ parser.add_argument(
     default=None,
     help="output directory for results (defaults to run_results)",
 )
+parser.add_argument(
+    "--limit_per_class",
+    type=int,
+    default=50,
+    help="maximum number of files to process per class (TheStack and repos)",
+)
 
 args = parser.parse_args()
 
@@ -201,7 +207,8 @@ if __name__ == "__main__":
 
     stack_count = 0
     repo_count = 0
-    LIMIT = 50  # Process 50 files from each class (Total 100)
+    LIMIT = args.limit_per_class
+    print(f"Processing up to {LIMIT} files from each class (max {LIMIT * 2} total)")
 
     for file_path in dataset_files:
         # 1. Check if we should skip this file based on logs
