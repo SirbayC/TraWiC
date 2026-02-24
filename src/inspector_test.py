@@ -17,6 +17,24 @@ class Colors:
 
 arg_parse = ArgumentParser()
 arg_parse.add_argument(
+    "--input_dir",
+    type=str,
+    default=None,
+    help="Directory containing test.csv (defaults to rf_data/syn{syn}_sem{sem})",
+)
+arg_parse.add_argument(
+    "--model_dir",
+    type=str,
+    default=None,
+    help="Directory containing trained model (defaults to current directory)",
+)
+arg_parse.add_argument(
+    "--output_dir",
+    type=str,
+    default=None,
+    help="Directory to save results (defaults to current directory)",
+)
+arg_parse.add_argument(
     "--syntactic_threshold",
     type=int,
     default=100,
@@ -29,24 +47,43 @@ arg_parse.add_argument(
 
 args = arg_parse.parse_args()
 
-combined_ds = pd.read_csv(
-    os.path.join(
+# Determine input directory
+if args.input_dir:
+    test_csv_path = os.path.join(args.input_dir, "test.csv")
+else:
+    test_csv_path = os.path.join(
         os.getcwd(),
         "rf_data",
         f"syn{args.syntactic_threshold}_sem{args.semantic_threshold}",
         "test.csv",
     )
-)
+
+# Determine model directory
+if args.model_dir:
+    model_path = os.path.join(
+        args.model_dir,
+        f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
+    )
+else:
+    model_path = f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav"
+
+# Determine output directory
+if args.output_dir:
+    output_dir = args.output_dir
+    os.makedirs(output_dir, exist_ok=True)
+else:
+    output_dir = os.getcwd()
+
+print(f"Reading test data from: {test_csv_path}")
+print(f"Loading model from: {model_path}")
+print(f"Saving outputs to: {output_dir}")
+
+combined_ds = pd.read_csv(test_csv_path)
 
 x, y = combined_ds.iloc[:, 1:-1].values, combined_ds.iloc[:, -1].values
 
 # load the Random Forest model
-clf = pickle.load(
-    open(
-        f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
-        "rb",
-    )
-)
+clf = pickle.load(open(model_path, "rb"))
 
 
 # calculate the accuracy, recall, precision, f1-score
@@ -62,7 +99,7 @@ false_negatives = 0
 
 # final results file
 results_file = open(
-    f"clf_rf.csv",
+    os.path.join(output_dir, "clf_rf.csv"),
     "a",
 )
 results_file.write(
@@ -70,7 +107,10 @@ results_file.write(
 )
 
 with open(
-    f"inspector_test_file_level_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    os.path.join(
+        output_dir,
+        f"inspector_test_file_level_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    ),
     "w",
 ) as f:
     f.write("repo_name,actual,predicted\n")
@@ -119,7 +159,10 @@ repo_false_negatives = 0
 
 threshold = 0.4  # if more than 40% of the files in a repo are predicted as 1, then the whole repo is predicted as 1
 with open(
-    f"inspector_test_repo_level_0.4_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    os.path.join(
+        output_dir,
+        f"inspector_test_repo_level_0.4_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    ),
     "w",
 ) as f:
     f.write("repo_name,predicted,actual\n")
@@ -161,7 +204,10 @@ repo_false_negatives = 0
 
 threshold = 0.6  # if more than 40% of the files in a repo are predicted as 1, then the whole repo is predicted as 1
 with open(
-    f"inspector_test_repo_level_0.6_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    os.path.join(
+        output_dir,
+        f"inspector_test_repo_level_0.6_rf__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.csv",
+    ),
     "w",
 ) as f:
     f.write("repo_name,predicted,actual\n")

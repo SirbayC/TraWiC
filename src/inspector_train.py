@@ -23,6 +23,18 @@ class Colors:
 
 arg_parse = ArgumentParser()
 arg_parse.add_argument(
+    "--input_dir",
+    type=str,
+    default=None,
+    help="Directory containing train.csv (defaults to rf_data/syn{syn}_sem{sem})",
+)
+arg_parse.add_argument(
+    "--output_dir",
+    type=str,
+    default=None,
+    help="Directory to save model and plots (defaults to current directory)",
+)
+arg_parse.add_argument(
     "--syntactic_threshold",
     type=int,
     default=100,
@@ -39,14 +51,28 @@ arg_parse.add_argument(
 )
 args = arg_parse.parse_args()
 
-combined_ds = pd.read_csv(
-    os.path.join(
+# Determine input directory
+if args.input_dir:
+    train_csv_path = os.path.join(args.input_dir, "train.csv")
+else:
+    train_csv_path = os.path.join(
         os.getcwd(),
         "rf_data",
         f"syn{args.syntactic_threshold}_sem{args.semantic_threshold}",
         "train.csv",
     )
-)
+
+# Determine output directory
+if args.output_dir:
+    output_dir = args.output_dir
+    os.makedirs(output_dir, exist_ok=True)
+else:
+    output_dir = os.getcwd()
+
+print(f"Reading training data from: {train_csv_path}")
+print(f"Saving outputs to: {output_dir}")
+
+combined_ds = pd.read_csv(train_csv_path)
 
 # Split the dataset into training and testing datasets
 train_ds, test_ds = train_test_split(
@@ -132,7 +158,10 @@ print(
 pickle.dump(
     clf,
     open(
-        f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
+        os.path.join(
+            output_dir,
+            f"rf_model__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.sav",
+        ),
         "wb",
     ),
 )
@@ -155,7 +184,10 @@ if args.visualisation:
     plt.tight_layout()
     # Save the figure with a descriptive filename
     plt.savefig(
-        f"feature_importance__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        os.path.join(
+            output_dir,
+            f"feature_importance__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        ),
         dpi=300,
     )
     # calcualte the distriutino of each feature
@@ -164,7 +196,10 @@ if args.visualisation:
     train_ds_numeric.hist(figsize=(20, 20))
     plt.tight_layout()
     plt.savefig(
-        f"feature_distribution__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        os.path.join(
+            output_dir,
+            f"feature_distribution__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        ),
         dpi=300,
     )
     #### Correlation Matrix ####
@@ -178,6 +213,9 @@ if args.visualisation:
     ax.tick_params(labelsize=12)
     plt.tight_layout(pad=2)
     plt.savefig(
-        f"correlation_matrix__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        os.path.join(
+            output_dir,
+            f"correlation_matrix__syn{args.syntactic_threshold}_sem{args.semantic_threshold}.png",
+        ),
         dpi=300,
     )

@@ -52,7 +52,36 @@ echo "=========================================="
 
 cd "$REPO_DIR"
 
-# TODO: run pipeline
+# ── Step 1: Model Inference ────────────────────────────────────────────────────
+echo "[$(date)] Running SantaCoder inference..."
+python -u src/main_santacoder.py \
+  --output_dir="$OUTDIR"
+
+# ── Step 2: Build Classification Dataset ──────────────────────────────────────
+echo "[$(date)] Building classification dataset..."
+python -u src/data/dataset_builder.py \
+  --input_dir="$OUTDIR" \
+  --output_dir="$OUTDIR/rf_data" \
+  --syntactic_threshold=100 \
+  --semantic_threshold=20
+
+# ── Step 3: Train Classifier ───────────────────────────────────────────────────
+echo "[$(date)] Training Random Forest classifier..."
+python -u src/inspector_train.py \
+  --input_dir="$OUTDIR/rf_data" \
+  --output_dir="$OUTDIR" \
+  --syntactic_threshold=100 \
+  --semantic_threshold=20 \
+  --visualisation=True
+
+# ── Step 4: Evaluate Classifier ────────────────────────────────────────────────
+echo "[$(date)] Evaluating classifier..."
+python -u src/inspector_test.py \
+  --input_dir="$OUTDIR/rf_data" \
+  --model_dir="$OUTDIR" \
+  --output_dir="$OUTDIR" \
+  --syntactic_threshold=100 \
+  --semantic_threshold=20
 
 echo "=========================================="
 echo "Job completed at: $(date)"

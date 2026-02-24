@@ -325,15 +325,57 @@ def process_dataset(
 
 
 if __name__ == "__main__":
-    WORKING_DIR = os.getcwd()
-    path = os.path.join(WORKING_DIR, "run_results", "TokensRun4") 
+    import argparse
     
-    build_dataset(path)
+    parser = argparse.ArgumentParser(
+        description="Build training datasets from model inference results"
+    )
+    parser.add_argument(
+        "--input_dir",
+        type=str,
+        default=None,
+        help="Directory containing results.jsonl (defaults to run_results)",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default=None,
+        help="Directory to save rf_data outputs (defaults to rf_data/syn{syn}_sem{sem})",
+    )
+    parser.add_argument(
+        "--syntactic_threshold",
+        type=int,
+        default=100,
+        help="Syntactic similarity threshold",
+    )
+    parser.add_argument(
+        "--semantic_threshold",
+        type=int,
+        default=20,
+        help="Semantic similarity threshold",
+    )
+    args = parser.parse_args()
+    
+    # Override global thresholds with command-line args
+    syn_thresh = args.syntactic_threshold
+    sem_thresh = args.semantic_threshold
+    
+    WORKING_DIR = os.getcwd()
+    
+    # Determine input directory
+    if args.input_dir:
+        input_path = args.input_dir
+    else:
+        input_path = os.path.join(WORKING_DIR, "run_results")
+    
+    print(f"Reading from: {input_path}")
+    
+    build_dataset(input_path)
     print("Datasets built.")
 
     print("Processing datasets...")
     processed_datasets = process_dataset(
-        os.path.join(path, "dataset.csv"),
+        os.path.join(input_path, "dataset.csv"),
         syntax_threshold=syn_thresh,
         semantic_threshold=sem_thresh,
     )
@@ -343,26 +385,26 @@ if __name__ == "__main__":
     train_df = final_dataset.iloc[: int(0.8 * len(final_dataset))]
     test_df = final_dataset.iloc[int(0.8 * len(final_dataset)) :]
 
-    if not sensitivity:
+    # Determine output directory
+    if args.output_dir:
+        rf_data_dir = args.output_dir
+    elif not sensitivity:
         rf_data_dir = os.path.join(
             WORKING_DIR, 
             "rf_data", 
             f"syn{syn_thresh}_sem{sem_thresh}"
         )
-        os.makedirs(rf_data_dir, exist_ok=True)
-
-        train_df.to_csv(os.path.join(rf_data_dir, "train.csv"))
-        test_df.to_csv(os.path.join(rf_data_dir, "test.csv"))
-
     else:
         rf_data_dir = os.path.join(
             WORKING_DIR,
             "rf_data",
             f"syn{syn_thresh}_sem{sem_thresh}_sen{sensitivity_threshold}",
         )
-        os.makedirs(rf_data_dir, exist_ok=True)
+    
+    os.makedirs(rf_data_dir, exist_ok=True)
+    print(f"Saving to: {rf_data_dir}")
 
-        train_df.to_csv(os.path.join(rf_data_dir, "train.csv"))
-        test_df.to_csv(os.path.join(rf_data_dir, "test.csv"))
+    train_df.to_csv(os.path.join(rf_data_dir, "train.csv"))
+    test_df.to_csv(os.path.join(rf_data_dir, "test.csv"))
 
     print("Datasets processed.")
