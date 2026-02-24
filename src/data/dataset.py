@@ -284,7 +284,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.get_scripts:
-        get_thestack_dataset(scripts_num=10**4)
+        get_thestack_dataset(scripts_num=10**5)
     else:
         # repo_info = json.load(open(os.path.join(os.getcwd(), "data", "repos.json"), "r"))
 

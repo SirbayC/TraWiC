@@ -51,16 +51,9 @@ Python 3.10 is required. Create and activate a virtual environment, then install
 pip install -r requirements.txt
 ```
 
-Install PyTorch with CUDA support (adjust for your CUDA version):
-
-```bash
-pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu121
-```
-
 Login to HuggingFace (required to download SantaCoder and TheStack):
 
 ```bash
-pip install huggingface-hub[cli]
 huggingface-cli login
 ```
 
